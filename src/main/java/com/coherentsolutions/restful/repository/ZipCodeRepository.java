@@ -10,4 +10,5 @@ import java.util.List;
 public interface ZipCodeRepository extends JpaRepository<ZipCode, Long> {
     boolean existsByCode(String code);
     List<ZipCode> findByCodeIn(List<String> codes);
+    ZipCode findByCode(String code);
 }

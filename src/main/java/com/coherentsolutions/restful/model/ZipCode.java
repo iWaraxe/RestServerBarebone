@@ -1,9 +1,8 @@
 package com.coherentsolutions.restful.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
+import java.util.Set;
 
 @Entity
 @Table(name = "zip_codes")
@@ -18,4 +17,7 @@ public class ZipCode {
 
     @Column(unique = true, nullable = false)
     private String code;
+
+    @OneToMany(mappedBy = "zipCode", cascade = CascadeType.ALL)
+    private Set<User> users;
 }
