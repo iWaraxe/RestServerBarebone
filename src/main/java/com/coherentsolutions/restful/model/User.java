@@ -20,7 +20,7 @@ public class User {
     private String email;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "zip_code_id")
+    @JoinColumn(name = "zip_code_id", nullable = true)
     private ZipCode zipCode;
 
     @Column(nullable = false)

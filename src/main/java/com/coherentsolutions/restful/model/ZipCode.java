@@ -20,4 +20,9 @@ public class ZipCode {
 
     @OneToMany(mappedBy = "zipCode", cascade = CascadeType.ALL)
     private Set<User> users;
+
+    // Additional constructor
+    public ZipCode(String code) {
+        this.code = code;
+    }
 }

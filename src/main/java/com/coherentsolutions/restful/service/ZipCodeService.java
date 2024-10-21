@@ -1,6 +1,8 @@
 package com.coherentsolutions.restful.service;
 
+import com.coherentsolutions.restful.model.User;
 import com.coherentsolutions.restful.model.ZipCode;
+import com.coherentsolutions.restful.repository.UserRepository;
 import com.coherentsolutions.restful.repository.ZipCodeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +22,9 @@ public class ZipCodeService {
     @Autowired
     private ZipCodeRepository zipCodeRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void deleteAllZipCodes() {
         logger.info("Deleting all existing zip codes");
@@ -31,15 +36,26 @@ public class ZipCodeService {
     public void resetZipCodes(List<String> newZipCodes) {
         logger.info("Resetting zip codes. New zip codes: {}", newZipCodes);
 
+        // Set zip_code_id to null for all users
+        logger.info("Setting zip_code_id to null for all users");
+        List<User> usersWithZipCodes = userRepository.findAllByZipCodeIsNotNull();
+        for (User user : usersWithZipCodes) {
+            user.setZipCode(null);
+        }
+        userRepository.saveAll(usersWithZipCodes);
+        logger.info("zip_code_id set to null for {} users", usersWithZipCodes.size());
+
+        // Delete all existing zip codes
         logger.info("Deleting all existing zip codes");
         zipCodeRepository.deleteAll();
-        zipCodeRepository.flush(); // Ensure deletions are flushed to the database
+        zipCodeRepository.flush();
         logger.info("All existing zip codes deleted");
 
+        // Prepare new zip codes for insertion
         logger.info("Preparing new zip codes for insertion");
         List<ZipCode> zipCodesToSave = newZipCodes.stream()
-                .distinct() // Remove duplicates
-                .map(code -> new ZipCode(null, code))
+                .distinct()
+                .map(ZipCode::new)
                 .collect(Collectors.toList());
         logger.info("Prepared {} unique zip codes for insertion", zipCodesToSave.size());
 
@@ -73,7 +89,7 @@ public class ZipCodeService {
         List<ZipCode> zipCodesToSave = newZipCodes.stream()
                 .distinct()
                 .filter(code -> !existingCodes.contains(code))
-                .map(code -> new ZipCode(null, code))
+                .map(ZipCode::new)
                 .collect(Collectors.toList());
         logger.info("Prepared {} new unique zip codes for insertion", zipCodesToSave.size());
 

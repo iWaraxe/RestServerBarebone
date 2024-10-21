@@ -6,12 +6,17 @@ import com.coherentsolutions.restful.model.User;
 import com.coherentsolutions.restful.model.ZipCode;
 import com.coherentsolutions.restful.repository.UserRepository;
 import com.coherentsolutions.restful.repository.ZipCodeRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+
 @Service
 public class UserService {
+    private static final Logger logger = LoggerFactory.getLogger(ZipCodeService.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -44,5 +49,10 @@ public class UserService {
 
         // Save user
         return userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteAllUsers() {
+        userRepository.deleteAll(); // Deletes all users from the database
     }
 }

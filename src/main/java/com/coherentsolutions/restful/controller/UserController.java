@@ -27,4 +27,11 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.FAILED_DEPENDENCY, e.getMessage(), e);
         }
     }
+
+    @DeleteMapping
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAllUsers() {
+        userService.deleteAllUsers();  // Implement this in the service to delete all users
+    }
+
 }
