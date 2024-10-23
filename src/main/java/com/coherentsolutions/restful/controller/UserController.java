@@ -9,12 +9,31 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @GetMapping
+    public List<User> getUsers(
+            @RequestParam(required = false) String olderThan,
+            @RequestParam(required = false) String youngerThan,
+            @RequestParam(required = false) String sex) {
+        try {
+            Integer olderThanInt = olderThan != null ? Integer.parseInt(olderThan) : null;
+            Integer youngerThanInt = youngerThan != null ? Integer.parseInt(youngerThan) : null;
+            return userService.getUsers(olderThanInt, youngerThanInt, sex);
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid age parameter", e);
+        } catch (BadRequestException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        }
+    }
+
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

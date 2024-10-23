@@ -8,4 +8,5 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255),
     sex VARCHAR(10) NOT NULL,
     zip_code_id BIGINT,
+    age INT NOT NULL,
     FOREIGN KEY (zip_code_id) REFERENCES zip_codes(id) ON DELETE SET NULL);

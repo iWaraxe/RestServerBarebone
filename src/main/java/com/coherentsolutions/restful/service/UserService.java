@@ -13,7 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class UserService {
@@ -29,6 +32,27 @@ public class UserService {
 
     @Autowired
     private ZipCodeRepository zipCodeRepository;
+
+    public List<User> getUsers(Integer olderThan, Integer youngerThan, String sex) {
+        List<User> users = userRepository.findAll();
+
+        Stream<User> userStream = users.stream();
+
+        if (olderThan != null) {
+            userStream = userStream.filter(user -> user.getAge() > olderThan);
+        }
+
+        if (youngerThan != null) {
+            userStream = userStream.filter(user -> user.getAge() < youngerThan);
+        }
+
+        if (sex != null && !sex.isEmpty()) {
+            userStream = userStream.filter(user -> user.getSex().equalsIgnoreCase(sex));
+        }
+
+        return userStream.collect(Collectors.toList());
+    }
+
 
     @Transactional
     public User createUser(User user) {
