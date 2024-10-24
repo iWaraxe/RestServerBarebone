@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -90,6 +91,89 @@ public class UserService {
         // Save user
         return userRepository.save(user);
     }
+
+    @Transactional
+    public User updateUser(Long id, User user, boolean isPartial) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("User not found"));
+
+        if (!isPartial) {
+            // Validate required fields
+            if (user.getName() == null || user.getName().isEmpty() ||
+                    user.getSex() == null || user.getSex().isEmpty()) {
+                throw new BadRequestException("Name and sex are required fields");
+            }
+
+            // Update all fields
+            existingUser.setName(user.getName());
+            existingUser.setEmail(user.getEmail());
+            existingUser.setSex(user.getSex());
+            existingUser.setAge(user.getAge());
+
+            // Update zip code
+            if (user.getZipCode() != null) {
+                ZipCode zipCode = zipCodeRepository.findByCode(user.getZipCode().getCode());
+                if (zipCode == null) {
+                    throw new FailedDependencyException("Zip code is unavailable");
+                } else {
+                    existingUser.setZipCode(zipCode);
+                }
+            } else {
+                existingUser.setZipCode(null);
+            }
+        } else {
+            // Partial update logic
+            // ...
+        }
+
+        return userRepository.save(existingUser);
+    }
+
+    @Transactional
+    public User partialUpdateUser(Long id, Map<String, Object> updates) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("User not found"));
+
+        // Apply updates
+        updates.forEach((key, value) -> {
+            switch (key) {
+                case "name":
+                    existingUser.setName((String) value);
+                    break;
+                case "email":
+                    existingUser.setEmail((String) value);
+                    break;
+                case "sex":
+                    existingUser.setSex((String) value);
+                    break;
+                case "age":
+                    existingUser.setAge((Integer) value);
+                    break;
+                case "zipCode":
+                    Map<String, String> zipCodeMap = (Map<String, String>) value;
+                    String zipCodeStr = zipCodeMap.get("code");
+                    ZipCode zipCode = zipCodeRepository.findByCode(zipCodeStr);
+                    if (zipCode == null) {
+                        throw new FailedDependencyException("Zip code is unavailable");
+                    } else {
+                        existingUser.setZipCode(zipCode);
+                    }
+                    break;
+                default:
+                    // Ignore unknown fields
+                    break;
+            }
+        });
+
+        // Validate required fields if missing after update
+        if (existingUser.getName() == null || existingUser.getName().isEmpty() ||
+                existingUser.getSex() == null || existingUser.getSex().isEmpty()) {
+            throw new BadRequestException("Name and sex are required fields");
+        }
+
+        return userRepository.save(existingUser);
+    }
+
 
     @Transactional
     public void deleteAllUsers() {

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -45,6 +46,16 @@ public class UserController {
         } catch (FailedDependencyException e) {
             throw new ResponseStatusException(HttpStatus.FAILED_DEPENDENCY, e.getMessage(), e);
         }
+    }
+
+    @PutMapping("/{id}")
+    public User updateUser(@PathVariable Long id, @RequestBody User user) {
+        return userService.updateUser(id, user, false);
+    }
+
+    @PatchMapping("/{id}")
+    public User partialUpdateUser(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
+        return userService.partialUpdateUser(id, updates);
     }
 
     @DeleteMapping
