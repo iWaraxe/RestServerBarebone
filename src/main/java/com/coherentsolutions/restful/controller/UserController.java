@@ -1,5 +1,6 @@
 package com.coherentsolutions.restful.controller;
 
+import com.coherentsolutions.restful.dto.UpdateUserDto;
 import com.coherentsolutions.restful.exception.BadRequestException;
 import com.coherentsolutions.restful.exception.FailedDependencyException;
 import com.coherentsolutions.restful.model.User;
@@ -36,16 +37,16 @@ public class UserController {
     }
 
 
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public User createUser(@RequestBody User user) {
-        try {
             return userService.createUser(user);
-        } catch (BadRequestException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
-        } catch (FailedDependencyException e) {
-            throw new ResponseStatusException(HttpStatus.FAILED_DEPENDENCY, e.getMessage(), e);
-        }
+    }
+
+    @PutMapping
+    public User updateUser(@RequestBody UpdateUserDto updateUserDto) {
+        return userService.updateUser(updateUserDto);
     }
 
     @PutMapping("/{id}")

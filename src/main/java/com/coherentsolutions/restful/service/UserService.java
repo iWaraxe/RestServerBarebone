@@ -1,6 +1,9 @@
 package com.coherentsolutions.restful.service;
 
+import com.coherentsolutions.restful.dto.UpdateUserDto;
+import com.coherentsolutions.restful.dto.UserDto;
 import com.coherentsolutions.restful.exception.BadRequestException;
+import com.coherentsolutions.restful.exception.ConflictException;
 import com.coherentsolutions.restful.exception.FailedDependencyException;
 import com.coherentsolutions.restful.model.User;
 import com.coherentsolutions.restful.model.ZipCode;
@@ -73,9 +76,8 @@ public class UserService {
             throw new BadRequestException("Invalid email format");
         }
 
-        // Check for duplicate user
         if (userRepository.existsByNameAndSex(user.getName(), user.getSex())) {
-            throw new BadRequestException("User with the same name and sex already exists");
+            throw new ConflictException("User with the same name and sex already exists");
         }
 
         // Validate zip code if provided
@@ -124,6 +126,67 @@ public class UserService {
         } else {
             // Partial update logic
             // ...
+        }
+
+        return userRepository.save(existingUser);
+    }
+
+    @Transactional
+    public User updateUser(UpdateUserDto updateUserDto) {
+        UserDto userToChangeDto = updateUserDto.getUserToChange();
+        UserDto userNewValuesDto = updateUserDto.getUserNewValues();
+
+        // Validate that userToChange fields are provided
+        if (userToChangeDto.getName() == null || userToChangeDto.getName().isEmpty() ||
+                userToChangeDto.getSex() == null || userToChangeDto.getSex().isEmpty()) {
+            throw new BadRequestException("Name and sex are required to identify the user to update");
+        }
+
+        // Find the user to update
+        User existingUser = userRepository.findByNameAndSex(userToChangeDto.getName(), userToChangeDto.getSex())
+                .orElseThrow(() -> new BadRequestException("User to update not found"));
+
+        // Update fields
+        if (userNewValuesDto.getName() != null) {
+            existingUser.setName(userNewValuesDto.getName());
+        }
+        if (userNewValuesDto.getEmail() != null) {
+            existingUser.setEmail(userNewValuesDto.getEmail());
+        }
+        if (userNewValuesDto.getSex() != null) {
+            existingUser.setSex(userNewValuesDto.getSex());
+        }
+        if (userNewValuesDto.getAge() != null) {
+            existingUser.setAge(userNewValuesDto.getAge());
+        }
+
+        // Update zip code if provided
+        if (userNewValuesDto.getZipCode() != null) {
+            ZipCode zipCode = zipCodeRepository.findByCode(userNewValuesDto.getZipCode());
+            if (zipCode == null) {
+                throw new FailedDependencyException("Zip code is unavailable");
+            } else {
+                existingUser.setZipCode(zipCode);
+            }
+        }
+
+        // Validate updated user
+        if (existingUser.getName() == null || existingUser.getName().isEmpty() ||
+                existingUser.getSex() == null || existingUser.getSex().isEmpty()) {
+            throw new BadRequestException("Name and sex are required fields");
+        }
+
+        // Validate that required fields are present in userNewValuesDto
+        if (userNewValuesDto.getName() == null || userNewValuesDto.getName().isEmpty() ||
+                userNewValuesDto.getSex() == null || userNewValuesDto.getSex().isEmpty()) {
+            throw new BadRequestException("Name and sex are required fields in new values");
+        }
+
+        // Check for duplicate user after update
+        boolean duplicateExists = userRepository.existsByNameAndSex(existingUser.getName(), existingUser.getSex())
+                && !existingUser.getId().equals(existingUser.getId());
+        if (duplicateExists) {
+            throw new BadRequestException("User with the same name and sex already exists");
         }
 
         return userRepository.save(existingUser);
