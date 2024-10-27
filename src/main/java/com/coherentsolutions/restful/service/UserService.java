@@ -76,6 +76,19 @@ public class UserService {
             throw new BadRequestException("Invalid email format");
         }
 
+        // Validate zip code if provided
+        if (user.getZipCode() != null) {
+            ZipCode zipCode = zipCodeRepository.findByCode(user.getZipCode().getCode());
+            if (zipCode == null || !zipCode.isAvailable()) {
+                throw new FailedDependencyException("Zip code is unavailable");
+            } else {
+                user.setZipCode(zipCode);
+                // Mark zip code as not available
+                zipCode.setAvailable(false);
+                zipCodeRepository.save(zipCode);
+            }
+        }
+
         if (userRepository.existsByNameAndSex(user.getName(), user.getSex())) {
             throw new ConflictException("User with the same name and sex already exists");
         }
@@ -237,6 +250,28 @@ public class UserService {
         return userRepository.save(existingUser);
     }
 
+    @Transactional
+    public void deleteUser(UserDto userDto) {
+        // Validate required fields
+        if (userDto.getName() == null || userDto.getName().isEmpty() ||
+                userDto.getSex() == null || userDto.getSex().isEmpty()) {
+            throw new ConflictException("Name and sex are required fields to delete a user");
+        }
+
+        // Find the user
+        User user = userRepository.findByNameAndSex(userDto.getName(), userDto.getSex())
+                .orElseThrow(() -> new ConflictException("User not found"));
+
+        // Delete the user
+        userRepository.delete(user);
+
+        // Return zip code to available list if zip code was associated
+        if (user.getZipCode() != null) {
+            ZipCode zipCode = user.getZipCode();
+            zipCode.setAvailable(true);
+            zipCodeRepository.save(zipCode);
+        }
+    }
 
     @Transactional
     public void deleteAllUsers() {

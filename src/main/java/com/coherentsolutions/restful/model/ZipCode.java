@@ -21,8 +21,12 @@ public class ZipCode {
     @OneToMany(mappedBy = "zipCode", cascade = CascadeType.ALL)
     private Set<User> users;
 
-    // Additional constructor
+    @Column(nullable = false)
+    private boolean available = true; // New field added
+
+    // Constructors
     public ZipCode(String code) {
         this.code = code;
+        this.available = true;
     }
 }

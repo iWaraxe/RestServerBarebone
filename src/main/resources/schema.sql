@@ -1,6 +1,8 @@
 CREATE TABLE IF NOT EXISTS zip_codes (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    code VARCHAR(10) UNIQUE NOT NULL);
+    code VARCHAR(10) UNIQUE NOT NULL,
+    available BOOLEAN NOT NULL DEFAULT TRUE  -- New column added
+    );
 
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -9,4 +11,5 @@ CREATE TABLE IF NOT EXISTS users (
     sex VARCHAR(10) NOT NULL,
     zip_code_id BIGINT,
     age INT NOT NULL,
-    FOREIGN KEY (zip_code_id) REFERENCES zip_codes(id) ON DELETE SET NULL);
+    FOREIGN KEY (zip_code_id) REFERENCES zip_codes(id) ON DELETE SET NULL
+    );

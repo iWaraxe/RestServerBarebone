@@ -32,6 +32,13 @@ public class ZipCodeService {
         logger.info("All existing zip codes deleted");
     }
 
+    public List<ZipCode> getAvailableZipCodes() {
+        logger.info("Retrieving all available zip codes");
+        List<ZipCode> zipCodes = zipCodeRepository.findByAvailableTrue();
+        logger.info("Retrieved {} available zip codes", zipCodes.size());
+        return zipCodes;
+    }
+
     @Transactional
     public void resetZipCodes(List<String> newZipCodes) {
         logger.info("Resetting zip codes. New zip codes: {}", newZipCodes);

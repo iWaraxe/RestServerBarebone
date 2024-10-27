@@ -1,6 +1,7 @@
 package com.coherentsolutions.restful.controller;
 
 import com.coherentsolutions.restful.dto.UpdateUserDto;
+import com.coherentsolutions.restful.dto.UserDto;
 import com.coherentsolutions.restful.exception.BadRequestException;
 import com.coherentsolutions.restful.exception.FailedDependencyException;
 import com.coherentsolutions.restful.model.User;
@@ -61,8 +62,15 @@ public class UserController {
 
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@RequestBody UserDto userDto) {
+        userService.deleteUser(userDto);
+    }
+
+    // Existing method to delete all users remains
+    @DeleteMapping("/all")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAllUsers() {
-        userService.deleteAllUsers();  // Implement this in the service to delete all users
+        userService.deleteAllUsers();
     }
 
 }

@@ -11,4 +11,5 @@ public interface ZipCodeRepository extends JpaRepository<ZipCode, Long> {
     boolean existsByCode(String code);
     List<ZipCode> findByCodeIn(List<String> codes);
     ZipCode findByCode(String code);
+    List<ZipCode> findByAvailableTrue();  // New method added
 }

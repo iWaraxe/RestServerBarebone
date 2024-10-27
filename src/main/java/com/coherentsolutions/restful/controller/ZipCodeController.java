@@ -23,7 +23,7 @@ public class ZipCodeController {
     @GetMapping
     public ResponseEntity<List<ZipCode>> getAvailableZipCodes() {
         logger.info("Received request to get available zip codes");
-        List<ZipCode> zipCodes = zipCodeService.getAllZipCodes();
+        List<ZipCode> zipCodes = zipCodeService.getAvailableZipCodes();
         logger.info("Returning {} zip codes", zipCodes.size());
         return ResponseEntity.ok(zipCodes);
     }
