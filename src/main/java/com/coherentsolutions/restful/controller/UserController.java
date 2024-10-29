@@ -3,12 +3,12 @@ package com.coherentsolutions.restful.controller;
 import com.coherentsolutions.restful.dto.UpdateUserDto;
 import com.coherentsolutions.restful.dto.UserDto;
 import com.coherentsolutions.restful.exception.BadRequestException;
-import com.coherentsolutions.restful.exception.FailedDependencyException;
 import com.coherentsolutions.restful.model.User;
 import com.coherentsolutions.restful.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -71,6 +71,13 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAllUsers() {
         userService.deleteAllUsers();
+    }
+
+    // Add new endpoint for uploading users
+    @PostMapping("/upload")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Map<String, Object> uploadUsers(@RequestParam("file") MultipartFile file) {
+        return userService.uploadUsers(file);
     }
 
 }

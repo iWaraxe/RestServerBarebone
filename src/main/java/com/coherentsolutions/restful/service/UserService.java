@@ -9,13 +9,20 @@ import com.coherentsolutions.restful.model.User;
 import com.coherentsolutions.restful.model.ZipCode;
 import com.coherentsolutions.restful.repository.UserRepository;
 import com.coherentsolutions.restful.repository.ZipCodeRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -270,6 +277,51 @@ public class UserService {
             ZipCode zipCode = user.getZipCode();
             zipCode.setAvailable(true);
             zipCodeRepository.save(zipCode);
+        }
+    }
+
+    // Implement the uploadUsers method
+    public Map<String, Object> uploadUsers(MultipartFile file) {
+        try {
+            String content = new String(file.getBytes(), StandardCharsets.UTF_8);
+            ObjectMapper objectMapper = new ObjectMapper();
+            List<User> users = objectMapper.readValue(content, new TypeReference<List<User>>() {});
+
+            // Validate all users
+            for (User user : users) {
+                validateUser(user);
+            }
+
+            // Replace all existing users
+            userRepository.deleteAll();
+            userRepository.saveAll(users);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("uploadedUsers", users.size());
+            return response;
+        } catch (FailedDependencyException e) {
+            throw new ResponseStatusException(HttpStatus.FAILED_DEPENDENCY, e.getMessage(), e);
+        } catch (ConflictException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file content", e);
+        }
+    }
+
+    // Implement validation logic
+    private void validateUser(User user) {
+        // Check required fields
+        if (user.getName() == null || user.getName().isEmpty() ||
+                user.getSex() == null || user.getSex().isEmpty()) {
+            throw new ConflictException("User is missing required fields");
+        }
+
+        // Validate zip code
+        if (user.getZipCode() != null) {
+            ZipCode zipCode = zipCodeRepository.findByCode(user.getZipCode().getCode());
+            if (zipCode == null || !zipCode.isAvailable()) {
+                throw new FailedDependencyException("Zip code is unavailable");
+            }
         }
     }
 
