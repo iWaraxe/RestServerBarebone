@@ -1,6 +1,7 @@
 package com.coherentsolutions.restful.service;
 
 import com.coherentsolutions.restful.dto.UpdateUserDto;
+import com.coherentsolutions.restful.dto.UploadUserDto;
 import com.coherentsolutions.restful.dto.UserDto;
 import com.coherentsolutions.restful.exception.BadRequestException;
 import com.coherentsolutions.restful.exception.ConflictException;
@@ -22,6 +23,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -285,11 +287,26 @@ public class UserService {
         try {
             String content = new String(file.getBytes(), StandardCharsets.UTF_8);
             ObjectMapper objectMapper = new ObjectMapper();
-            List<User> users = objectMapper.readValue(content, new TypeReference<List<User>>() {});
+            List<UploadUserDto> usersDto = objectMapper.readValue(content, new TypeReference<List<UploadUserDto>>() {});
 
-            // Validate all users
-            for (User user : users) {
+            List<User> users = new ArrayList<>();
+            for (UploadUserDto dto : usersDto) {
+                User user = new User();
+                user.setName(dto.getName());
+                user.setEmail(dto.getEmail());
+                user.setSex(dto.getSex());
+                user.setAge(dto.getAge());
+
+                if (dto.getZipCode() != null) {
+                    ZipCode zipCode = zipCodeRepository.findByCode(dto.getZipCode().getCode());
+                    if (zipCode == null || !zipCode.isAvailable()) {
+                        throw new FailedDependencyException("Zip code " + dto.getZipCode().getCode() + " is unavailable");
+                    }
+                    user.setZipCode(zipCode);
+                }
+
                 validateUser(user);
+                users.add(user);
             }
 
             // Replace all existing users
@@ -308,12 +325,15 @@ public class UserService {
         }
     }
 
+
     // Implement validation logic
     private void validateUser(User user) {
         // Check required fields
-        if (user.getName() == null || user.getName().isEmpty() ||
-                user.getSex() == null || user.getSex().isEmpty()) {
-            throw new ConflictException("User is missing required fields");
+        if (user.getName() == null || user.getName().isEmpty()) {
+            throw new ConflictException("User is missing the required field: name");
+        }
+        if (user.getSex() == null || user.getSex().isEmpty()) {
+            throw new ConflictException("User is missing the required field: sex");
         }
 
         // Validate zip code
